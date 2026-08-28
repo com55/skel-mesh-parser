@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BinaryReader } from '../src/binary-reader.js';
-import { walkHeaderAndConstraints38 } from '../src/read-skeleton-38.js';
+import { walkHeaderAndConstraints38, readSkeleton38 } from '../src/read-skeleton-38.js';
 
 function u8(...bytes) { return new Uint8Array(bytes); }
 
@@ -138,5 +138,94 @@ test('walks one of each 3.8 constraint kind (IK, transform, path)', () => {
   const r = new BinaryReader(bytes);
   const { strings } = walkHeaderAndConstraints38(r);
   assert.deepEqual(strings, []);
+  assert.equal(r.position, bytes.length);
+});
+
+test('readSkeleton38: Mesh attachment extracts uvs and triangles (3.8 field order)', () => {
+  // 3.8 Mesh field order: path, color, vertexCount, uvs (BEFORE vertices),
+  // triangles (self-describing readShort array), vertices, hullLength.
+  // No per-attachment flag byte anywhere.
+  const bytes = u8(
+    // --- header (walkHeaderAndConstraints38) ---
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // x, y, width, height (4 floats)
+    0, // nonessential
+    1, // numStrings
+    ...name('tri'), // strings[0] = "tri"
+    0, // numBones
+    0, // numSlots
+    0, // IK constraint count
+    0, // transform constraint count
+    0, // path constraint count
+    // --- default skin (readSkin38) ---
+    1, // slotCount
+    0, // slotIndex
+    1, // attachmentCount
+    1, // attachmentName ref -> "tri"
+    1, // name ref (readAttachment38) -> "tri"
+    2, // typeIndex = Mesh
+    1, // path ref -> "tri"
+    0, 0, 0, 0, // color (unconditional)
+    3, // vertexCount
+    // uvs: 6 floats = [0, 1, 0, 1, 1, 0]
+    0, 0, 0, 0, // 0
+    63, 128, 0, 0, // 1
+    0, 0, 0, 0, // 0
+    63, 128, 0, 0, // 1
+    63, 128, 0, 0, // 1
+    0, 0, 0, 0, // 0
+    3, // triangleCount
+    0, 0, 0, 1, 0, 2, // triangles: 3 shorts [0, 1, 2]
+    0, // weighted (readVertices38)
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 6 vertex floats
+    3, // hullLength
+    // --- end ---
+    0, // otherSkinCount
+  );
+
+  const r = new BinaryReader(bytes);
+  const result = readSkeleton38(r, false);
+  assert.equal(result.size, 1);
+  const info = result.get('tri');
+  assert.deepEqual(info, {
+    type: 'Mesh',
+    path: 'tri',
+    uvs: [0, 1, 0, 1, 1, 0],
+    triangles: [0, 1, 2],
+  });
+  assert.equal(r.position, bytes.length);
+});
+
+test('readSkeleton38: LinkedMesh attachment (no uvs/triangles keys)', () => {
+  const bytes = u8(
+    // --- header ---
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 4 floats
+    0, // nonessential
+    1, // numStrings
+    ...name('lm'), // strings[0] = "lm"
+    0, // numBones
+    0, // numSlots
+    0, 0, 0, // IK/transform/path constraint counts
+    // --- default skin ---
+    1, // slotCount
+    0, // slotIndex
+    1, // attachmentCount
+    1, // attachmentName ref -> "lm"
+    1, // name ref -> "lm"
+    3, // typeIndex = LinkedMesh
+    1, // path ref -> "lm"
+    0, 0, 0, 0, // color
+    0, // skinName ref (null)
+    0, // parent ref (null)
+    0, // inheritDeform
+    // --- end ---
+    0, // otherSkinCount
+  );
+
+  const r = new BinaryReader(bytes);
+  const result = readSkeleton38(r, false);
+  const info = result.get('lm');
+  assert.deepEqual(info, { type: 'LinkedMesh', path: 'lm' });
+  assert.equal('uvs' in info, false);
+  assert.equal('triangles' in info, false);
   assert.equal(r.position, bytes.length);
 });
