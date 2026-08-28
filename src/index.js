@@ -6,7 +6,7 @@ import { readSkeleton38 } from './read-skeleton-38.js';
 
 export { UnsupportedVersionError };
 
-export function parseSkeleton(bytes, { nonessential = true } = {}) {
+export function parseSkeleton(bytes) {
   const version = detectVersion(bytes);
   // Once the version is known, the header shape is no longer ambiguous —
   // redo exactly the right skip (not a "replay" of a single assumed
@@ -21,8 +21,8 @@ export function parseSkeleton(bytes, { nonessential = true } = {}) {
                    // after the hash, whatever shape the hash itself took
 
   const attachments = (version.major === 4 && version.minor === 2)
-    ? readSkeleton42(r, nonessential)
-    : readSkeleton38(r, nonessential);
+    ? readSkeleton42(r)
+    : readSkeleton38(r);
 
   return { version, attachments };
 }
