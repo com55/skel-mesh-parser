@@ -36,3 +36,9 @@ Beyond hand-built binary fixtures for each wire-format branch, this library is v
 Implementation is informed by reading — never copying — the official `spine-ts` reference source, which is licensed under the Spine Runtimes License (not permissive; redistributing or deriving substantial code from it requires a Spine Editor license per that license's terms). Every field-layout fact in this project's source cites the exact file/line/commit it came from, so a reviewer can verify the *facts* (wire format, byte order, field presence) against primary source without this repo's code being a derivative of that source's *expression*. Pinned commits (branch HEAD at time of writing, 2026-08-28 — re-verify before relying on a moved branch ref):
 - 4.2: `EsotericSoftware/spine-runtimes@b81e5a58ed38704aee4f866f0e0ac672623ce914`, `spine-ts/spine-core/src/SkeletonBinary.ts`
 - 3.8: `EsotericSoftware/spine-runtimes@8b4844bd4b193ba9e54487ed397a777993cbad56`, `spine-ts/core/src/SkeletonBinary.ts`
+
+## Disclaimer
+
+This project is **not affiliated with, endorsed by, or associated with Esoteric Software** or the Spine runtime in any way. "Spine" is a trademark of Esoteric Software.
+
+Provided **as-is, without warranty of any kind** — see [LICENSE](LICENSE) for details.
