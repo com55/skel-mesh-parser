@@ -9,6 +9,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseSkeleton } from '../src/index.js';
+import { BinaryReader } from '../src/binary-reader.js';
+import { readSkeleton38 } from '../src/read-skeleton-38.js';
 
 const bytes = readFileSync(new URL('../fixtures/38/goblins-pro.skel', import.meta.url));
 
@@ -60,4 +62,24 @@ test('every Mesh attachment in goblins-pro.skel has well-formed uvs/triangles', 
     assert.equal(m.triangles.length % 3, 0);
     assert.ok(m.uvs.every(v => v >= -0.01 && v <= 1.01), 'uvs should be ~0-1 normalized');
   }
+});
+
+test('3.8 multi-skin walk lands exactly at the end of the skins section', () => {
+  // Regression pin: goblins-pro.skel has 3 skins (default + 2 others). The
+  // 3.8 skin walk is the trickiest part of the 3.8 reader (per-skin
+  // bone/constraint ref tables, nonessential-gated skin color, table-index
+  // skin-name refs), and nothing previously asserted that walking all three
+  // lands at the correct byte position. This pins the currently-correct
+  // behavior: readSkeleton38 stops at the end of the skins section, which is
+  // the start of the events section (events count 0, then animations count 1)
+  // — offset 10562. It does NOT reach bytes.length (17672) by design: this
+  // library's scope is attachments only, so it does not parse the
+  // events/animations sections that follow. Any byte miscount in the 3-skin
+  // walk (wrong ref-table count, wrong nonessential handling, wrong skin-name
+  // ref) would shift this position.
+  const r = new BinaryReader(new Uint8Array(bytes));
+  r.readString(); // 3.8 hash: a string
+  r.readString(); // version string
+  readSkeleton38(r);
+  assert.equal(r.position, 10562);
 });
