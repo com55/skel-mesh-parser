@@ -8,12 +8,17 @@ export { UnsupportedVersionError };
 
 export function parseSkeleton(bytes, { nonessential = true } = {}) {
   const version = detectVersion(bytes);
-  // detectVersion consumed the header from its own fresh reader; start a
-  // second reader at the same point for the real walk (cheaper and less
-  // error-prone than trying to share position state across two modules).
+  // Once the version is known, the header shape is no longer ambiguous —
+  // redo exactly the right skip (not a "replay" of a single assumed
+  // shape, per the bug this task found).
   const r = new BinaryReader(bytes);
-  r.readInt32(); r.readInt32(); // hash
-  r.readString(); // version string, already parsed by detectVersion
+  if (version.major === 4 && version.minor === 2) {
+    r.readInt32(); r.readInt32(); // 4.2 hash: 2 int32s
+  } else {
+    r.readString(); // 3.8 hash: a string
+  }
+  r.readString(); // version string — same position in both shapes: right
+                   // after the hash, whatever shape the hash itself took
 
   const attachments = (version.major === 4 && version.minor === 2)
     ? readSkeleton42(r, nonessential)
