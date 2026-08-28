@@ -1,6 +1,6 @@
 {
   "name": "spine-skeleton-binary-js",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Minimal dependency-free parser for the skin/attachment section of Spine skeleton binary files (.skel, 3.8.x and 4.2.x).",
   "type": "module",
   "main": "src/index.js",
