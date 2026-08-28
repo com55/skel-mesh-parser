@@ -16,6 +16,14 @@ test('readUByte reads unsigned int8', () => {
   assert.equal(r.readUByte(), 255);
 });
 
+test('readShort reads signed int16 big-endian', () => {
+  // 0x7FFF = 32767, 0x8000 = -32768, 0xFFFF = -1
+  const r = new BinaryReader(new Uint8Array([0x7f, 0xff, 0x80, 0x00, 0xff, 0xff]));
+  assert.equal(r.readShort(), 32767);
+  assert.equal(r.readShort(), -32768);
+  assert.equal(r.readShort(), -1);
+});
+
 test('readInt32 reads signed int32 big-endian', () => {
   // 0x00000001 = 1, 0xFFFFFFFF = -1
   const r = new BinaryReader(new Uint8Array([0x00, 0x00, 0x00, 0x01, 0xff, 0xff, 0xff, 0xff]));
