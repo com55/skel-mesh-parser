@@ -39,3 +39,16 @@ test('throws UnsupportedVersionError when neither header shape yields a supporte
   // (which reads the 8 zero bytes as a varint-length string) fails too.
   assert.throws(() => detectVersion(bytesForVersion42('9.9.9')), UnsupportedVersionError);
 });
+
+test('throws UnsupportedVersionError (not RangeError) on a short adversarial buffer', () => {
+  // 9 bytes: the 4.2 trial reads 2 int32s (8 bytes) then a string whose
+  // length byte is 0 → null. The 3.8 trial re-reads the same bytes as
+  // hash + version; the version string's length varint comes out huge, so
+  // readString() would `new Uint8Array(huge)` and throw RangeError. Both
+  // trials are RangeError-guarded, so this must surface as
+  // UnsupportedVersionError, not escape as a raw RangeError.
+  assert.throws(
+    () => detectVersion(new Uint8Array([50, 0, 0, 0, 0, 0, 0, 0, 0])),
+    UnsupportedVersionError,
+  );
+});

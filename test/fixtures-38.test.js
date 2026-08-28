@@ -27,16 +27,15 @@ test('goblins-pro.skel default skin: exact attachment set per the spine_asset or
   // as a Mesh, and "shield" as a Region. This library's public
   // Map<path, AttachmentInfo> is keyed by resolved path, so the two
   // "dagger" entries (same name, same resolved path, different type)
-  // collapse into one — the later one in wire order wins (Map.set
-  // semantics). In this file the Mesh dagger is read after the Region
-  // dagger, so the surviving entry is the Mesh. This collision is
-  // documented in the Task 8 report as a known limitation, not a bug to
-  // fix here.
+  // collapse into one. The tie-break is now deterministic and not
+  // dependent on wire order: on a path collision a Mesh always wins over
+  // any other type (it conveys uvs/triangles), so the surviving entry is
+  // the Mesh dagger regardless of read order.
   assert.equal(attachments.size, 3);
 
   const dagger = attachments.get('dagger');
   assert.ok(dagger, 'expected a "dagger" attachment');
-  assert.equal(dagger.type, 'Mesh', 'the Mesh dagger wins the path collision (read after the Region dagger in wire order)');
+  assert.equal(dagger.type, 'Mesh', 'the Mesh dagger wins the path collision (deterministic Mesh-wins tie-break)');
   assert.equal(dagger.uvs.length, 28);
   assert.equal(dagger.triangles.length, 36);
 
