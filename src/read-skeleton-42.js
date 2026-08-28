@@ -54,7 +54,7 @@ export function walkHeaderAndConstraints42(r) {
   skipPathConstraints42(r);
   skipPhysicsConstraints42(r);
 
-  return { strings };
+  return { strings, nonessential };
 }
 
 function skipIkConstraints42(r) {
@@ -149,8 +149,8 @@ const ATTACHMENT_TYPES = ['Region', 'BoundingBox', 'Mesh', 'LinkedMesh', 'Path',
  *  returning the default skin's attachments as a Map keyed by resolved path
  *  (atlas region name when the wire carries a path, otherwise the
  *  attachment's own name). Other skins are walked but discarded. */
-export function readSkeleton42(r, nonessential) {
-  const { strings } = walkHeaderAndConstraints42(r);
+export function readSkeleton42(r) {
+  const { strings, nonessential } = walkHeaderAndConstraints42(r);
   const result = new Map();
   readSkin42(r, strings, nonessential, result);
   const otherSkinCount = r.readVarint(true);

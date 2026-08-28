@@ -46,7 +46,7 @@ export function walkHeaderAndConstraints38(r) {
   skipPathConstraints38(r);
   // No physics constraints in 3.8 — that kind is a 4.2-only addition.
 
-  return { strings };
+  return { strings, nonessential };
 }
 
 function skipIkConstraints38(r) {
@@ -114,8 +114,8 @@ function skipPathConstraints38(r) {
 
 const ATTACHMENT_TYPES = ['Region', 'BoundingBox', 'Mesh', 'LinkedMesh', 'Path', 'Point', 'Clipping'];
 
-export function readSkeleton38(r, nonessential) {
-  const { strings } = walkHeaderAndConstraints38(r);
+export function readSkeleton38(r) {
+  const { strings, nonessential } = walkHeaderAndConstraints38(r);
   const result = new Map();
   readSkin38(r, strings, nonessential, result);
   const otherSkinCount = r.readVarint(true);

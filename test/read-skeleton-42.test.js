@@ -98,7 +98,7 @@ test('readSkeleton42 extracts uvs/triangles for a Mesh attachment', () => {
     0,                                   // otherSkinCount = 0
   );
   const r = new BinaryReader(bytes);
-  const result = readSkeleton42(r, false);
+  const result = readSkeleton42(r);
   assert.equal(result.size, 1);
   assert.deepEqual(result.get('tri'), {
     type: 'Mesh',
@@ -125,7 +125,7 @@ test('a LinkedMesh attachment is reported as type LinkedMesh, not Mesh, with no 
     0,                                   // otherSkinCount = 0
   );
   const r = new BinaryReader(bytes);
-  const result = readSkeleton42(r, false);
+  const result = readSkeleton42(r);
   assert.equal(result.size, 1);
   const info = result.get('lm');
   assert.deepEqual(info, { type: 'LinkedMesh', path: 'lm' });

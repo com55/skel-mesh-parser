@@ -183,7 +183,7 @@ test('readSkeleton38: Mesh attachment extracts uvs and triangles (3.8 field orde
   );
 
   const r = new BinaryReader(bytes);
-  const result = readSkeleton38(r, false);
+  const result = readSkeleton38(r);
   assert.equal(result.size, 1);
   const info = result.get('tri');
   assert.deepEqual(info, {
@@ -251,12 +251,12 @@ function skeletonWithTriAttachments(...attachments) {
 
 test('readSkeleton38: Mesh wins a path collision regardless of wire order', () => {
   // Region first, Mesh second.
-  let result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(regionTri, meshTri)), false);
+  let result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(regionTri, meshTri)));
   assert.equal(result.size, 1);
   assert.equal(result.get('tri').type, 'Mesh');
 
   // Mesh first, Region second — Mesh must still win (not last-write-wins).
-  result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(meshTri, regionTri)), false);
+  result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(meshTri, regionTri)));
   assert.equal(result.size, 1);
   assert.equal(result.get('tri').type, 'Mesh');
   assert.ok('uvs' in result.get('tri') && 'triangles' in result.get('tri'));
@@ -289,7 +289,7 @@ test('readSkeleton38: LinkedMesh attachment (no uvs/triangles keys)', () => {
   );
 
   const r = new BinaryReader(bytes);
-  const result = readSkeleton38(r, false);
+  const result = readSkeleton38(r);
   const info = result.get('lm');
   assert.deepEqual(info, { type: 'LinkedMesh', path: 'lm' });
   assert.equal('uvs' in info, false);

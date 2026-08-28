@@ -19,8 +19,6 @@ const info = attachments.get('some_region_name');
 // info.uvs / info.triangles: present ONLY when info.type === 'Mesh'
 ```
 
-`parseSkeleton` takes an optional second argument, `{ nonessential = true }` — set to `false` to skip fields Spine marks non-essential for runtime use (this library doesn't retain those values anyway; the option exists because whether a `.skel` file's data actually includes them affects the byte layout, and the default matches most real-world exports).
-
 **Scope, by design:**
 - Default skin only. Non-default skins are walked (to keep the byte stream aligned) but not returned.
 - `Mesh`-type attachments only carry `uvs`/`triangles` — `Region` et al. don't need them (a `Region`'s whole rectangle *is* its content).
