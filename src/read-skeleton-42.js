@@ -139,3 +139,146 @@ function skipPhysicsConstraints42(r) {
     if ((flags2 & 128) !== 0) r.readFloat(); // mix
   }
 }
+
+// Attachment type order matches the flag low-3-bits encoding in
+// SkeletonBinary.readAttachment (4.2): 0=Region, 1=BoundingBox, 2=Mesh,
+// 3=LinkedMesh, 4=Path, 5=Point, 6=Clipping.
+const ATTACHMENT_TYPES = ['Region', 'BoundingBox', 'Mesh', 'LinkedMesh', 'Path', 'Point', 'Clipping'];
+
+/** Reads a 4.2.x skeleton from the position left by the version-string read,
+ *  returning the default skin's attachments as a Map keyed by resolved path
+ *  (atlas region name when the wire carries a path, otherwise the
+ *  attachment's own name). Other skins are walked but discarded. */
+export function readSkeleton42(r, nonessential) {
+  const { strings } = walkHeaderAndConstraints42(r);
+  const result = new Map();
+  readSkin42(r, strings, nonessential, result);
+  const otherSkinCount = r.readVarint(true);
+  for (let i = 0; i < otherSkinCount; i++) {
+    r.readString(); // skin name
+    if (nonessential) r.readInt32(); // skin color (4.2 only)
+    skipSkinBoneAndConstraintRefs42(r);
+    readSkin42(r, strings, nonessential, null); // null = discard attachments
+  }
+  return result;
+}
+
+function readSkin42(r, strings, nonessential, outMap) {
+  const slotCount = r.readVarint(true);
+  for (let i = 0; i < slotCount; i++) {
+    r.readVarint(true); // slotIndex, unused
+    const attachmentCount = r.readVarint(true);
+    for (let ii = 0; ii < attachmentCount; ii++) {
+      const attachmentName = r.readStringRef(strings);
+      const info = readAttachment42(r, strings, attachmentName, nonessential);
+      if (outMap && info) outMap.set(info.path, info);
+    }
+  }
+}
+
+function readAttachment42(r, strings, attachmentName, nonessential) {
+  const flags = r.readUByte();
+  const name = (flags & 8) ? r.readStringRef(strings) : attachmentName;
+  const type = ATTACHMENT_TYPES[flags & 0b111];
+  switch (type) {
+    case 'Region': {
+      const path = (flags & 16) ? r.readStringRef(strings) : null;
+      if (flags & 32) r.readInt32();
+      if (flags & 64) skipSequence42(r);
+      if (flags & 128) r.readFloat();
+      r.readFloat(); r.readFloat(); r.readFloat(); r.readFloat(); r.readFloat(); r.readFloat();
+      return { type: 'Region', path: path ?? name };
+    }
+    case 'BoundingBox': {
+      readVertices42(r, !!(flags & 16));
+      if (nonessential) r.readInt32();
+      return { type: 'BoundingBox', path: name };
+    }
+    case 'Mesh': {
+      const path = (flags & 16) ? r.readStringRef(strings) : name;
+      if (flags & 32) r.readInt32();
+      if (flags & 64) skipSequence42(r);
+      const hullLength = r.readVarint(true);
+      const { floatCount } = readVertices42(r, !!(flags & 128));
+      const uvs = readFloatArray42(r, floatCount);
+      const triangleCount = (floatCount - hullLength - 2) * 3;
+      const triangles = [];
+      for (let i = 0; i < triangleCount; i++) triangles.push(r.readVarint(true));
+      if (nonessential) {
+        const edgeCount = r.readVarint(true);
+        for (let i = 0; i < edgeCount; i++) r.readVarint(true);
+        r.readFloat(); r.readFloat();
+      }
+      return { type: 'Mesh', path: path ?? name, uvs, triangles };
+    }
+    case 'LinkedMesh': {
+      const path = (flags & 16) ? r.readStringRef(strings) : name;
+      if (flags & 32) r.readInt32();
+      if (flags & 64) skipSequence42(r);
+      r.readVarint(true); // skinIndex
+      r.readStringRef(strings); // parent
+      if (nonessential) { r.readFloat(); r.readFloat(); }
+      return { type: 'LinkedMesh', path: path ?? name };
+    }
+    case 'Path': {
+      const { floatCount } = readVertices42(r, !!(flags & 64));
+      const lengthCount = Math.floor(floatCount / 6);
+      for (let i = 0; i < lengthCount; i++) r.readFloat();
+      if (nonessential) r.readInt32();
+      return { type: 'Path', path: name };
+    }
+    case 'Point': {
+      r.readFloat(); r.readFloat(); r.readFloat();
+      if (nonessential) r.readInt32();
+      return { type: 'Point', path: name };
+    }
+    case 'Clipping': {
+      r.readVarint(true); // endSlotIndex
+      readVertices42(r, !!(flags & 16));
+      if (nonessential) r.readInt32();
+      return { type: 'Clipping', path: name };
+    }
+    default:
+      throw new Error(`Unknown attachment type flag: ${flags & 0b111}`);
+  }
+}
+
+function readVertices42(r, weighted) {
+  const vertexCount = r.readVarint(true);
+  const floatCount = vertexCount * 2;
+  if (!weighted) {
+    for (let i = 0; i < floatCount; i++) r.readFloat();
+    return { floatCount };
+  }
+  for (let i = 0; i < vertexCount; i++) {
+    const boneCount = r.readVarint(true);
+    for (let ii = 0; ii < boneCount; ii++) {
+      r.readVarint(true); // boneIndex
+      r.readFloat(); r.readFloat(); r.readFloat(); // weightX, weightY, weightValue
+    }
+  }
+  return { floatCount };
+}
+
+function readFloatArray42(r, n) {
+  const arr = new Array(n);
+  for (let i = 0; i < n; i++) arr[i] = r.readFloat();
+  return arr;
+}
+
+function skipSequence42(r) {
+  r.readVarint(true); r.readVarint(true); r.readVarint(true); r.readVarint(true); // count, start, digits, setupIndex
+}
+
+function skipSkinBoneAndConstraintRefs42(r) {
+  const boneCount = r.readVarint(true);
+  for (let i = 0; i < boneCount; i++) r.readVarint(true); // bone index
+  const ikCount = r.readVarint(true);
+  for (let i = 0; i < ikCount; i++) r.readVarint(true); // IK constraint index
+  const transformCount = r.readVarint(true);
+  for (let i = 0; i < transformCount; i++) r.readVarint(true); // transform constraint index
+  const pathCount = r.readVarint(true);
+  for (let i = 0; i < pathCount; i++) r.readVarint(true); // path constraint index
+  const physicsCount = r.readVarint(true);
+  for (let i = 0; i < physicsCount; i++) r.readVarint(true); // physics constraint index
+}
