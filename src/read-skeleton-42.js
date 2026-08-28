@@ -171,7 +171,14 @@ function readSkin42(r, strings, nonessential, outMap) {
     for (let ii = 0; ii < attachmentCount; ii++) {
       const attachmentName = r.readStringRef(strings);
       const info = readAttachment42(r, strings, attachmentName, nonessential);
-      if (outMap && info) outMap.set(info.path, info);
+      if (outMap && info) {
+        const existing = outMap.get(info.path);
+        // Deterministic tie-break on path collision: a Mesh conveys more
+        // (uvs/triangles) than a Region, so it wins regardless of wire order.
+        if (!existing || info.type === 'Mesh' || existing.type !== 'Mesh') {
+          outMap.set(info.path, info);
+        }
+      }
     }
   }
 }

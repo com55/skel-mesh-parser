@@ -37,9 +37,17 @@ export function detectVersion(bytes) {
   }
 
   // Fall back to 3.8's header shape: hash as a string, then version string.
-  const r38 = new BinaryReader(bytes);
-  r38.readString(); // hash
-  const raw38 = r38.readString();
+  // Same RangeError guard as the 4.2 trial above: a short/adversarial buffer
+  // can make a misread string length blow up `new Uint8Array(len)`, and that
+  // must fall through to UnsupportedVersionError, not escape as RangeError.
+  let raw38;
+  try {
+    const r38 = new BinaryReader(bytes);
+    r38.readString(); // hash
+    raw38 = r38.readString();
+  } catch (e) {
+    if (!(e instanceof RangeError)) throw e;
+  }
   const m38 = /^(\d+)\.(\d+)\.(\d+)/.exec(raw38 ?? '');
   if (m38 && Number(m38[1]) === 3 && Number(m38[2]) === 8) {
     return { major: 3, minor: 8, patch: Number(m38[3]), raw: raw38 };

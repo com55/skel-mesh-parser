@@ -195,6 +195,73 @@ test('readSkeleton38: Mesh attachment extracts uvs and triangles (3.8 field orde
   assert.equal(r.position, bytes.length);
 });
 
+// Region attachment sharing path "tri". Each attachment block begins with
+// the attachmentName ref read by readSkin38, then readAttachment38's own
+// name ref, typeIndex, and type-specific fields.
+const regionTri = u8(
+  1, // attachmentName ref (readSkin38) -> "tri"
+  1, // name ref (readAttachment38) -> "tri"
+  0, // typeIndex = Region
+  1, // path ref -> "tri"
+  0, 0, 0, 0, // rotation
+  0, 0, 0, 0, // x
+  0, 0, 0, 0, // y
+  0, 0, 0, 0, // scaleX
+  0, 0, 0, 0, // scaleY
+  0, 0, 0, 0, // width
+  0, 0, 0, 0, // height
+  0, 0, 0, 0, // color
+);
+
+// Mesh attachment sharing path "tri".
+const meshTri = u8(
+  1, // attachmentName ref (readSkin38) -> "tri"
+  1, // name ref (readAttachment38) -> "tri"
+  2, // typeIndex = Mesh
+  1, // path ref -> "tri"
+  0, 0, 0, 0, // color
+  1, // vertexCount
+  0, 0, 0, 0, 0, 0, 0, 0, // uvs: vertexCount * 2 = 2 floats
+  0, // triangleCount
+  0, // weighted
+  0, 0, 0, 0, 0, 0, 0, 0, // vertices: 2 floats
+  0, // hullLength
+);
+
+// Assemble a full 3.8 skeleton with a single slot holding the given
+// attachments (in wire order), all sharing path "tri".
+function skeletonWithTriAttachments(...attachments) {
+  const header = [
+    // --- header ---
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 4 floats
+    0, // nonessential
+    1, // numStrings
+    ...name('tri'), // strings[0] = "tri"
+    0, // numBones
+    0, // numSlots
+    0, 0, 0, // IK/transform/path constraint counts
+    // --- default skin: 1 slot, N attachments ---
+    1, // slotCount
+    0, // slotIndex
+    attachments.length, // attachmentCount
+  ];
+  const body = attachments.flat().flatMap(a => (a instanceof Uint8Array ? [...a] : a));
+  return u8(...header, ...body, 0); // 0 = otherSkinCount
+}
+
+test('readSkeleton38: Mesh wins a path collision regardless of wire order', () => {
+  // Region first, Mesh second.
+  let result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(regionTri, meshTri)), false);
+  assert.equal(result.size, 1);
+  assert.equal(result.get('tri').type, 'Mesh');
+
+  // Mesh first, Region second — Mesh must still win (not last-write-wins).
+  result = readSkeleton38(new BinaryReader(skeletonWithTriAttachments(meshTri, regionTri)), false);
+  assert.equal(result.size, 1);
+  assert.equal(result.get('tri').type, 'Mesh');
+  assert.ok('uvs' in result.get('tri') && 'triangles' in result.get('tri'));
+});
+
 test('readSkeleton38: LinkedMesh attachment (no uvs/triangles keys)', () => {
   const bytes = u8(
     // --- header ---
