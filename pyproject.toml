@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "skel-mesh-parser"
-version = "0.1.0"
+version = "0.2.0"
 description = "Minimal dependency-free parser for the skin/attachment section of Spine skeleton binary files (.skel, 3.8.x and 4.2.x). Python port of the js branch's spine-skeleton-binary-js."
 readme = "README.md"
 requires-python = ">=3.11"
