@@ -115,12 +115,24 @@ class BinaryReader:
         # first, which routinely walks misaligned bytes (arbitrary skeleton
         # data, not string data) as if they were a length-prefixed string.
         # errors="replace" avoids the crash without chasing byte-for-byte
-        # parity with JS's specific garbled output: the only real consumer
-        # of a malformed decode result (detect_version's regex match
-        # against `^\d+\.\d+\.\d+`) treats any garbage the same way -- as
-        # "no match" -- so the observable behavior (version-detection
-        # outcome) stays identical regardless of the exact garbled
-        # characters produced.
+        # parity with JS's specific garbled output. This guarantee is
+        # crash-safety, not full observable-behavior parity: on any
+        # non-crafted input, the version-detection outcome matches JS,
+        # since the only real consumer today (detect_version's regex match
+        # against `^\d+\.\d+\.\d+`) treats ordinary garbage the same way --
+        # as "no match". A scrutinize re-review found this DOES have a real
+        # (adversarial-only) counterexample -- a hand-crafted overlong
+        # 2-byte UTF-8 sequence (e.g. bytes C0 B4 C0 AE C0 B2 C0 AE C0 B0)
+        # decodes in JS's utf8Decode() to the literal string "4.2.0"
+        # (overlong encodings drop their high bits, `(0xC0 & 0x1f) << 6 |
+        # (b1 & 0x3f)` collapses to `b1 & 0x3f`, i.e. plain ASCII), which
+        # WOULD match the version regex -- while Python's errors="replace"
+        # produces U+FFFD characters that don't. No real skeleton file's
+        # misaligned-byte walk produces this pattern; only a deliberately
+        # crafted payload would. This claim is scoped to today's two call
+        # sites (both in detect_version.py) -- Tasks 5-7 add consumers
+        # (attachment/skin/event names) that don't route through a regex,
+        # so re-examine this note once those land.
         return raw.decode("utf-8", errors="replace")
 
     def read_string_ref(self, strings: list[str | None]) -> str | None:
