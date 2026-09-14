@@ -106,7 +106,22 @@ class BinaryReader:
         self._require(length)
         raw = self._data[self._pos : self._pos + length]
         self._pos += length
-        return raw.decode("utf-8")
+        # JS's manual utf8Decode() never throws -- malformed bytes just
+        # produce garbled String.fromCharCode output, not an exception.
+        # Strict decode("utf-8") raises UnicodeDecodeError instead, a real
+        # divergence found by Stage 2's Task 4 scrutinize review: reachable
+        # not just adversarially but on ANY real 3.8 file, since
+        # detect_version() always speculatively tries the 4.2 header shape
+        # first, which routinely walks misaligned bytes (arbitrary skeleton
+        # data, not string data) as if they were a length-prefixed string.
+        # errors="replace" avoids the crash without chasing byte-for-byte
+        # parity with JS's specific garbled output: the only real consumer
+        # of a malformed decode result (detect_version's regex match
+        # against `^\d+\.\d+\.\d+`) treats any garbage the same way -- as
+        # "no match" -- so the observable behavior (version-detection
+        # outcome) stays identical regardless of the exact garbled
+        # characters produced.
+        return raw.decode("utf-8", errors="replace")
 
     def read_string_ref(self, strings: list[str | None]) -> str | None:
         # JS: `return index === 0 ? null : strings[index - 1];` -- an

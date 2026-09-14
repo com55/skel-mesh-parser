@@ -79,6 +79,17 @@ def test_read_string_utf8_multibyte():
     assert r.read_string() == "café"
 
 
+def test_read_string_malformed_utf8_does_not_raise():
+    # 0x80 is a bare continuation byte -- invalid as a UTF-8 lead byte.
+    # Real JS's utf8Decode() never throws on this; the Python port must not
+    # either (see read_string()'s own comment for why this is reachable on
+    # real input, not just adversarial).
+    payload = bytes([0x80, 0x80])
+    r = BinaryReader(bytes([len(payload) + 1]) + payload)
+    result = r.read_string()
+    assert isinstance(result, str)  # did not raise
+
+
 def test_read_string_ref_zero_is_none():
     r = BinaryReader(bytes([0x00]))
     assert r.read_string_ref(["a", "b"]) is None
