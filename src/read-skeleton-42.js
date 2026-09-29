@@ -216,7 +216,7 @@ function readAttachment42(r, strings, attachmentName, nonessential) {
         for (let i = 0; i < edgeCount; i++) r.readVarint(true);
         r.readFloat(); r.readFloat();
       }
-      return { type: 'Mesh', path: path ?? name, uvs, triangles };
+      return { type: 'Mesh', path: path ?? name, uvs, triangles, hullLength };
     }
     case 'LinkedMesh': {
       const path = (flags & 16) ? r.readStringRef(strings) : name;

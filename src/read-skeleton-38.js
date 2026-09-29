@@ -180,14 +180,14 @@ function readAttachment38(r, strings, attachmentName, nonessential) {
       const triangles = [];
       for (let i = 0; i < triangleCount; i++) triangles.push(r.readShort());
       readVertices38(r, vertexCount);
-      r.readVarint(true); // hullLength, unused by this library
+      const hullLength = r.readVarint(true); // vertex count; first hullLength UV pairs are the outline
       if (nonessential) {
         const edgeCount = r.readVarint(true);
         for (let i = 0; i < edgeCount; i++) r.readShort();
         r.readFloat(); // width
         r.readFloat(); // height
       }
-      return { type: 'Mesh', path: path ?? name, uvs, triangles };
+      return { type: 'Mesh', path: path ?? name, uvs, triangles, hullLength };
     }
     case 'LinkedMesh': {
       const path = r.readStringRef(strings);
