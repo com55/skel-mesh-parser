@@ -9,12 +9,10 @@ animation, no timelines, IK, physics, or constraint solving. Supports Spine
 versions **3.8.x and 4.2.x only** (anything else raises
 `UnsupportedVersionError`).
 
-**Status:** implemented (v0.2.0) — `parse_skeleton` is wired up for both
-3.8.x and 4.2.x. It is a field-for-field port of the `js` branch's reader
-and has been validated against the official Spine 3.8 `goblins-pro.skel`
-example (see [Testing](#testing)). Note that it tracks the `js` branch as of
-v0.2.0; later `js` changes (e.g. `hullLength` on `Mesh` results) have not
-been ported.
+**Status:** implemented — `parse_skeleton` is wired up for both 3.8.x and
+4.2.x. It is a field-for-field port of the `js` branch's reader and has been
+validated against the official Spine 3.8 `goblins-pro.skel` example (see
+[Testing](#testing)).
 
 ## Usage
 
@@ -30,13 +28,15 @@ result = parse_skeleton(data)
 
 info = result["attachments"]["some_region_name"]
 # info["type"]: "Region" | "BoundingBox" | "Mesh" | "LinkedMesh" | "Path" | "Point" | "Clipping"
-# info["uvs"] / info["triangles"]: present ONLY when info["type"] == "Mesh"
+# info["uvs"] / info["triangles"] / info["hull_length"]: present ONLY when
+# info["type"] == "Mesh" (hull_length is the js branch's `hullLength`: the
+# number of outline vertices, i.e. the first hull_length UV pairs)
 ```
 
 **Scope, by design (same as the `js` branch):**
 - Default skin only. Non-default skins are walked (to keep the byte stream
   aligned) but not returned.
-- `Mesh`-type attachments only carry `uvs`/`triangles`.
+- `Mesh`-type attachments only carry `uvs`/`triangles`/`hull_length`.
 - `LinkedMesh` is reported as its own distinct type, never confused with
   `Mesh`.
 - On an attachment-path collision within the same skin, the `Mesh` entry

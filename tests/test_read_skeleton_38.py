@@ -20,7 +20,7 @@ def test_reads_mesh_region_and_path_attachments_from_synthetic_fixture():
     assert set(result.keys()) == {"mesh_a", "region_b", "path_c"}
     assert result["mesh_a"] == {
         "type": "Mesh", "path": "mesh_a",
-        "uvs": [0.0, 0.0, 1.0, 0.0, 0.5, 1.0], "triangles": [0],
+        "uvs": [0.0, 0.0, 1.0, 0.0, 0.5, 1.0], "triangles": [0], "hull_length": 0,
     }
     assert result["region_b"] == {"type": "Region", "path": "region_b"}
     # This is the discriminating assertion for the ceil-vs-floor bug: if
