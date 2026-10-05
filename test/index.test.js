@@ -62,7 +62,7 @@ test('parseSkeleton honors the file\'s own nonessential byte (wire=false) withou
   const result = parseSkeleton(bytes); // no options — the only documented call
   assert.equal(result.version.major, 4);
   assert.deepEqual(result.attachments.get('tri'), {
-    type: 'Mesh', path: 'tri', uvs: [0, 1, 0, 1, 1, 0], triangles: [0, 1, 2],
+    type: 'Mesh', path: 'tri', uvs: [0, 1, 0, 1, 1, 0], triangles: [0, 1, 2], hullLength: 3,
   });
 });
 

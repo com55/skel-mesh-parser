@@ -6,9 +6,10 @@
   "main": "src/index.js",
   "exports": "./src/index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:integration": "node --test integration/goblins-38.integration.js"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "engines": {
     "node": ">=18"
   }
