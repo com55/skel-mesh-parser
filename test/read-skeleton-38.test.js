@@ -191,6 +191,7 @@ test('readSkeleton38: Mesh attachment extracts uvs and triangles (3.8 field orde
     path: 'tri',
     uvs: [0, 1, 0, 1, 1, 0],
     triangles: [0, 1, 2],
+    hullLength: 3,
   });
   assert.equal(r.position, bytes.length);
 });
