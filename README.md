@@ -9,11 +9,14 @@ animation, no timelines, IK, physics, or constraint solving. Supports Spine
 versions **3.8.x and 4.2.x only** (anything else raises
 `UnsupportedVersionError`).
 
-**Status:** package skeleton only — the actual port from the `js` branch has
-not landed yet. See that branch for the reference implementation this one
-is porting from, field-for-field, with no behavioral changes.
+**Status:** implemented (v0.2.0) — `parse_skeleton` is wired up for both
+3.8.x and 4.2.x. It is a field-for-field port of the `js` branch's reader
+and has been validated against the official Spine 3.8 `goblins-pro.skel`
+example (see [Testing](#testing)). Note that it tracks the `js` branch as of
+v0.2.0; later `js` changes (e.g. `hullLength` on `Mesh` results) have not
+been ported.
 
-## Usage (once implemented)
+## Usage
 
 ```python
 from skel_mesh_parser import parse_skeleton
