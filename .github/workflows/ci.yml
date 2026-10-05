@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Offline tests only: no Spine assets, no network.
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+
+  # Needs the official Spine example asset (downloaded on demand, SHA-256
+  # verified). Kept separate so an external outage cannot fail the offline job.
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: .cache/spine
+          key: spine-goblins-pro-skel-7941a9cf
+      - run: npm run test:integration
+        env:
+          SPINE_FIXTURE_REQUIRED: '1'

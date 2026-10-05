@@ -1,27 +1,37 @@
-// test/fixtures-38.test.js
-// Real-fixture validation against the official Spine 3.8 goblins example
-// (fixtures/38/, vendored from the Spine 3.8 example export — see
-// fixtures/38/license.txt). Expected values below are the confirmed
-// oracle results from an independent cross-validation with the
-// `spine_asset` Python package (MIT) against the same file's default
-// skin — not just "length > 0" sanity checks.
+// integration/goblins-38.integration.js
+// Integration test against the official Spine 3.8 goblins example. NOT part of
+// `npm test`: run it with `npm run test:integration`. The asset is not
+// distributed by this repository — test-support/spine-fixture.js uses a local
+// cache (.cache/spine/), downloads it from Esoteric Software's official
+// spine-runtimes repository at a pinned commit, or reads $SPINE_GOBLINS_SKEL,
+// and always verifies a pinned SHA-256 (see THIRD_PARTY_NOTICES.md). If the
+// fixture cannot be obtained, the tests are skipped with a clear message; a
+// checksum mismatch fails the run.
+//
+// Expected values below are the confirmed oracle results from an independent
+// cross-validation with the `spine_asset` Python package (MIT-licensed, not included here) against the same
+// file's default skin — not just "length > 0" sanity checks.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { parseSkeleton } from '../src/index.js';
 import { BinaryReader } from '../src/binary-reader.js';
 import { readSkeleton38 } from '../src/read-skeleton-38.js';
+import { resolveGoblinsSkel } from '../test-support/spine-fixture.js';
 
-const bytes = readFileSync(new URL('../fixtures/38/goblins-pro.skel', import.meta.url));
+const fixture = await resolveGoblinsSkel(); // throws on checksum mismatch
+const skip = fixture.status === 'unavailable' ? fixture.reason : false;
+const bytes = fixture.bytes;
+if (skip) console.warn(`SKIPPED goblins-pro.skel integration tests: ${skip}`);
+else console.log(`goblins-pro.skel loaded from ${fixture.source}: ${fixture.path}`);
 
-test('parses the real goblins-pro.skel (3.8) and reports version 3.8.55', () => {
+test('parses the real goblins-pro.skel (3.8) and reports version 3.8.55', { skip }, () => {
   const { version } = parseSkeleton(new Uint8Array(bytes));
   assert.equal(version.major, 3);
   assert.equal(version.minor, 8);
   assert.equal(version.raw, '3.8.55');
 });
 
-test('goblins-pro.skel default skin: exact attachment set per the spine_asset oracle', () => {
+test('goblins-pro.skel default skin: exact attachment set per the spine_asset oracle', { skip }, () => {
   const { attachments } = parseSkeleton(new Uint8Array(bytes));
 
   // The oracle lists 4 attachments in the default skin: "dagger" as a
@@ -52,7 +62,7 @@ test('goblins-pro.skel default skin: exact attachment set per the spine_asset or
   assert.equal(shield.type, 'Region');
 });
 
-test('every Mesh attachment in goblins-pro.skel has well-formed uvs/triangles', () => {
+test('every Mesh attachment in goblins-pro.skel has well-formed uvs/triangles', { skip }, () => {
   const { attachments } = parseSkeleton(new Uint8Array(bytes));
   const meshes = [...attachments.values()].filter(a => a.type === 'Mesh');
   assert.ok(meshes.length > 0, 'expected at least one Mesh attachment in goblins-pro.skel default skin');
@@ -64,7 +74,7 @@ test('every Mesh attachment in goblins-pro.skel has well-formed uvs/triangles', 
   }
 });
 
-test('3.8 multi-skin walk lands exactly at the end of the skins section', () => {
+test('3.8 multi-skin walk lands exactly at the end of the skins section', { skip }, () => {
   // Regression pin: goblins-pro.skel has 3 skins (default + 2 others). The
   // 3.8 skin walk is the trickiest part of the 3.8 reader (per-skin
   // bone/constraint ref tables, nonessential-gated skin color, table-index

@@ -105,6 +105,7 @@ test('readSkeleton42 extracts uvs/triangles for a Mesh attachment', () => {
     path: 'tri',
     uvs: [0, 1, 0, 1, 1, 0],
     triangles: [0, 1, 2],
+    hullLength: 3,
   });
   assert.equal(r.position, bytes.length);
 });
