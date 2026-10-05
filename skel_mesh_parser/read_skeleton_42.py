@@ -207,7 +207,7 @@ def _read_attachment_42(
             for _ in range(edge_count):
                 r.read_varint(True)
             r.read_float(); r.read_float()
-        return {"type": "Mesh", "path": path if path is not None else name, "uvs": uvs, "triangles": triangles}
+        return {"type": "Mesh", "path": path if path is not None else name, "uvs": uvs, "triangles": triangles, "hull_length": hull_length}
 
     if attachment_type == "LinkedMesh":
         path = r.read_string_ref(strings) if (flags & 16) else name

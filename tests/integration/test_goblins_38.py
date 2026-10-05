@@ -53,6 +53,8 @@ def test_every_mesh_has_well_formed_uvs_and_triangles(goblins):
         assert m["uvs"] and m["triangles"]
         assert len(m["triangles"]) % 3 == 0
         assert all(-0.01 <= v <= 1.01 for v in m["uvs"])
+        # hull_length counts outline vertices, so it can't exceed the vertex count
+        assert 0 < m["hull_length"] <= len(m["uvs"]) // 2
 
 
 def test_multi_skin_walk_lands_at_end_of_skins_section(goblins):

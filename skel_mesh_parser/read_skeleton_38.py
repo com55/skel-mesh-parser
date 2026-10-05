@@ -155,13 +155,13 @@ def _read_attachment_38(
         triangle_count = r.read_varint(True)
         triangles = [r.read_short() for _ in range(triangle_count)]
         _read_vertices_38(r, vertex_count)
-        r.read_varint(True)  # hullLength, unused
+        hull_length = r.read_varint(True)  # vertex count; first hull_length UV pairs are the outline
         if nonessential:
             edge_count = r.read_varint(True)
             for _ in range(edge_count):
                 r.read_short()
             r.read_float(); r.read_float()  # width, height
-        return {"type": "Mesh", "path": path if path is not None else name, "uvs": uvs, "triangles": triangles}
+        return {"type": "Mesh", "path": path if path is not None else name, "uvs": uvs, "triangles": triangles, "hull_length": hull_length}
 
     if attachment_type == "LinkedMesh":
         path = r.read_string_ref(strings)
