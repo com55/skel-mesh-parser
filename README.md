@@ -25,6 +25,18 @@ const info = attachments.get('some_region_name');
 - `LinkedMesh` is reported as its own distinct type, never confused with `Mesh` — its real geometry lives in a parent mesh attachment (possibly in another skin), which this library doesn't resolve.
 - If an attachment path collides with another attachment's path within the same skin (two different slots drawing the same underlying region, one as e.g. `Region` and one as `Mesh`), the `Mesh` entry always wins, deterministically — regardless of which one appears first on the wire.
 
+## Versions and tags
+
+This `js` branch and the `python` branch are released independently, each
+with its own version numbers and tag prefix:
+
+- `js-vX.Y.Z` — this `js` branch (the version in `package.json`).
+- `py-vX.Y.Z` — the `python` branch (`skel-mesh-parser`).
+
+The older unprefixed tags `v1.0.0` and `v1.1.0` are the same `js` releases as
+`js-v1.0.0` and `js-v1.1.0`. 1.1.0 added `hullLength` to `Mesh` results; 1.1.1
+changes only the license (Apache-2.0) and test assets, not the parser.
+
 ## Testing
 
 ```sh
