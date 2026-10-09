@@ -19,7 +19,7 @@ from skel_mesh_parser.detect_version import UnsupportedVersionError, detect_vers
 from skel_mesh_parser.read_skeleton_38 import read_skeleton_38
 from skel_mesh_parser.read_skeleton_42 import read_skeleton_42
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = ["parse_skeleton", "UnsupportedVersionError"]
 
 
