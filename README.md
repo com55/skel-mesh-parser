@@ -33,9 +33,8 @@ with its own version numbers and tag prefix:
 - `js-vX.Y.Z` — this `js` branch (the version in `package.json`).
 - `py-vX.Y.Z` — the `python` branch (`skel-mesh-parser`).
 
-The older unprefixed tags `v1.0.0` and `v1.1.0` are the same `js` releases as
-`js-v1.0.0` and `js-v1.1.0`. 1.1.0 added `hullLength` to `Mesh` results; 1.1.1
-changes only the license (Apache-2.0) and test assets, not the parser.
+1.1.0 added `hullLength` to `Mesh` results; 1.1.1 changes only the license
+(Apache-2.0) and test assets, not the parser.
 
 ## Testing
 
