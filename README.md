@@ -50,7 +50,6 @@ numbers and tag prefix:
 - `py-vX.Y.Z` — this `python` branch (the version in `pyproject.toml`).
 - `js-vX.Y.Z` — the `js` branch (`spine-skeleton-binary-js`).
 
-Older unprefixed tags (`v1.0.0`, `v1.1.0`) belong to the `js` branch.
 To depend on a fixed release, pin the tag rather than the branch, e.g.
 `skel-mesh-parser @ git+https://github.com/com55/skel-mesh-parser.git@py-v0.3.0`.
 
